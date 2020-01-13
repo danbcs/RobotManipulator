@@ -22,7 +22,7 @@ function varargout = RobotManipulator(varargin)
 
 % Edit the above text to modify the response to help RobotManipulator
 
-% Last Modified by GUIDE v2.5 29-Jun-2019 13:20:28
+% Last Modified by GUIDE v2.5 17-Aug-2019 12:20:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -50,6 +50,40 @@ function RobotManipulator_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to RobotManipulator (see VARARGIN)
+global a;
+global status_garra;
+global status_traj;
+global status_loop;
+% Alterações Iniciais
+status_traj = 0;
+status_loop = 0;
+if(isempty(seriallist))
+    handles.listUsb.String = 'NoUSB';
+else
+    handles.listUsb.String = seriallist';
+    if exist('a','var') && isa(a,'arduino') && isvalid(a)
+        delete(a);
+    end
+    a=arduino('COM4');
+    servoAttach(a,11);
+    servoAttach(a,10);
+    servoAttach(a,9);
+    servoAttach(a,6);
+    servoAttach(a,5);
+    servoAttach(a,3);
+    status_garra = 1;
+    servoWrite(a,3,10);
+end
+handles.pn_controle.Visible = 'off';
+handles.panel_inicio_help.Visible = 'on';
+handles.panel_inicio.Visible = 'on';
+axes(handles.axes3);
+imshow('ifce_logo.png');
+axes(handles.axes2);
+handles.uibuttongroup4.Visible = 'off';
+handles.panel_cd.Visible = 'off';
+handles.panel_ci.Visible = 'off';
+handles.panel_traj.Visible = 'off';
 
 % Choose default command line output for RobotManipulator
 handles.output = hObject;
@@ -78,6 +112,10 @@ function inicio_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+handles.panel_inicio.Visible = 'on';
+handles.panel_inicio_help.Visible = 'on';
+handles.pn_controle.Visible = 'off';
+handles.uibuttongroup4.Visible = 'off';
 handles.panel_cd.Visible = 'off';
 handles.panel_ci.Visible = 'off';
 handles.panel_traj.Visible = 'off';
@@ -90,6 +128,10 @@ function cin_dir_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+handles.panel_inicio.Visible = 'off';
+handles.panel_inicio_help.Visible = 'off';
+handles.uibuttongroup4.Visible = 'on';
+handles.pn_controle.Visible = 'off';
 handles.panel_traj.Visible = 'off';
 handles.panel_cd.Visible = 'on';
 handles.panel_ci.Visible = 'off';
@@ -101,6 +143,10 @@ function cin_inv_Callback(hObject, eventdata, handles)
 % hObject    handle to cin_inv (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.panel_inicio.Visible = 'off';
+handles.panel_inicio_help.Visible = 'off';
+handles.uibuttongroup4.Visible = 'on';
+handles.pn_controle.Visible = 'off';
 handles.panel_cd.Visible = 'off';
 handles.panel_traj.Visible = 'off';
 handles.panel_ci.Visible = 'on';
@@ -111,6 +157,10 @@ function traj_Callback(hObject, eventdata, handles)
 % hObject    handle to traj (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.panel_inicio.Visible = 'off';
+handles.panel_inicio_help.Visible = 'off';
+handles.uibuttongroup4.Visible = 'on';
+handles.pn_controle.Visible = 'off';
 handles.panel_cd.Visible = 'off';
 handles.panel_ci.Visible = 'off';
 handles.panel_traj.Visible = 'on';
@@ -122,21 +172,28 @@ function pushbutton5_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton5 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.panel_inicio.Visible = 'off';
+handles.panel_inicio_help.Visible = 'off';
+handles.uibuttongroup4.Visible = 'on';
+handles.pn_controle.Visible = 'on';
+handles.panel_cd.Visible = 'off';
+handles.panel_ci.Visible = 'off';
+handles.panel_traj.Visible = 'off';
+guidata(hObject,handles);
 
-
-% --- Executes on selection change in popupmenu1.
-function popupmenu1_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu1 (see GCBO)
+% --- Executes on selection change in listUsb.
+function listUsb_Callback(hObject, eventdata, handles)
+% hObject    handle to listUsb (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu1 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenu1
+% Hints: contents = cellstr(get(hObject,'String')) returns listUsb contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from listUsb
 
 
 % --- Executes during object creation, after setting all properties.
-function popupmenu1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu1 (see GCBO)
+function listUsb_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to listUsb (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -244,10 +301,7 @@ function lab_omega3_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-valSld1 = hObject.String;
-handles.sld_omega3.Value = str2double(valSld1);
 
-guidata(hObject,handles);
 
 
 % --- Executes on slider movement.
@@ -352,11 +406,32 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in pushbutton8.
-function pushbutton8_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton8 (see GCBO)
+% --- Executes on button press in bt_aleat_fow.
+function bt_aleat_fow_Callback(hObject, eventdata, handles)
+% hObject    handle to bt_aleat_fow (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+omeg1 = randi(180);
+handles.sld_omega1.Value = (omeg1);
+handles.lab_omega1.String = num2str(omeg1);
+
+omeg1 = randi(180);
+handles.sld_omega2.Value = (omeg1);
+handles.lab_omega2.String = num2str(omeg1);
+
+n = randi(100);
+omeg1 = randi(90)*(-1)^n;
+handles.sld_omega3.Value = (omeg1);
+handles.lab_omega3.String = num2str(omeg1);
+
+n = randi(100);
+omeg1 = randi(90)*(-1)^n;
+handles.sld_omega4.Value = (omeg1);
+handles.lab_omega4.String = num2str(omeg1);
+
+guidata(hObject,handles);
+
+
 
 
 % --- Executes on button press in bt_enviar_fow.
@@ -366,41 +441,51 @@ function bt_enviar_fow_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 global status_rotation;
-global omega1
-global omega2
-global omega3
-global omega4
+global omega1;
+global omega2;
+global omega3;
+global omega4;
 global Robot;
 global L;
 global dof;
+global T;
+global initial_pos;
+global initial_ang;
+global a;
 
 switch dof
     case '1'
         omega1 = deg2rad(handles.sld_omega1.Value);
         
+        T = Robot.fkine(omega1).double();
         Robot.plot(omega1, 'workspace', [-300 300, -300 300, -300 300],'tilesize',100);
+        initial_ang = [omega1];
         
-        set(handles.tb_link1, 'Data', L(1).A(omega1).double());
+        set(handles.tb_link1, 'Data', round(L(1).A(omega1).double(),3));
 
     case '2'
         omega1 = deg2rad(handles.sld_omega1.Value);
         omega2 = deg2rad(handles.sld_omega2.Value);
         
+        T = Robot.fkine([omega1 omega2]).double();
         Robot.plot([omega1 omega2], 'workspace', [-300 300, -300 300, -300 300],'tilesize',100);
-        
-        set(handles.tb_link1, 'Data', L(1).A(omega1).double());
-        set(handles.tb_link2, 'Data', L(2).A(omega2).double());
+        initial_ang = [omega1 omega2];
+       
+        set(handles.tb_link1, 'Data', round(L(1).A(omega1).double(),3));
+        set(handles.tb_link2, 'Data', round(L(2).A(omega2).double(),3));
 
     case '3'
         omega1 = deg2rad(handles.sld_omega1.Value);
         omega2 = deg2rad(handles.sld_omega2.Value);
         omega3 = deg2rad(handles.sld_omega3.Value);
         
-        Robot.plot([omega1 omega2 omega3], 'workspace', [-300 300, -300 300, -300 300],'tilesize',100);
+        T = Robot.fkine([omega1 omega2 omega3]).double();
+        Robot.animate([omega1 omega2 omega3]);
+        initial_ang = [omega1 omega2 omega3];
         
-        set(handles.tb_link1, 'Data', L(1).A(omega1).double());
-        set(handles.tb_link2, 'Data', L(2).A(omega2).double());
-        set(handles.tb_link3, 'Data', L(3).A(omega3).double());
+        set(handles.tb_link1, 'Data', round(L(1).A(omega1).double(),3));
+        set(handles.tb_link2, 'Data', round(L(2).A(omega2).double(),3));
+        set(handles.tb_link3, 'Data', round(L(3).A(omega3).double(),3));
 
     otherwise
         omega1 = deg2rad(handles.sld_omega1.Value);
@@ -408,15 +493,20 @@ switch dof
         omega3 = deg2rad(handles.sld_omega3.Value);
         omega4 = deg2rad(handles.sld_omega4.Value);
         
+        T = Robot.fkine([omega1 omega2 omega3 omega4]).double();
         Robot.plot([omega1 omega2 omega3 omega4], 'workspace', [-300 300, -300 300, -300 300],'tilesize',100);
-        
-        set(handles.tb_link1, 'Data', L(1).A(omega1).double());
-        set(handles.tb_link2, 'Data', L(2).A(omega2).double());
-        set(handles.tb_link3, 'Data', L(3).A(omega3).double());
-        set(handles.tb_link4, 'Data', L(4).A(omega4).double());
+        initial_ang = [omega1 omega2 omega3 omega4];
+        % remover se utilizar o manipulador físico
+        connArd(dof, a, 0, initial_ang(1), initial_ang(2), initial_ang(3), initial_ang(4));
+        set(handles.tb_link1, 'Data', round(L(1).A(omega1).double(),3));
+        set(handles.tb_link2, 'Data', round(L(2).A(omega2).double(),3));
+        set(handles.tb_link3, 'Data', round(L(3).A(omega3).double(),3));
+        set(handles.tb_link4, 'Data', round(L(4).A(omega4).double(),3));
 
 end
+set(handles.tb_T, 'Data', round(T,3));
 
+initial_pos = [T(1,4) T(2,4) T(3,4)];
 %[Robot, L] = mountRobot(a1, a2, a3, a4, alpha1, alpha2, alpha3, alpha4, d1, d2, d3, d4);
 rotate3d off;
 status_rotation = 0;
@@ -2268,11 +2358,15 @@ function bt_plotdh_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 %clf(handles.axes2,'reset');
-
+global a;
+global sentidoPunho;
 global status_rotation;
 global Robot;
 global L;
 global dof;
+global T;
+global initial_pos;
+global initial_ang;
 
 % recebendo valor do GUIDE
 % a - Comprimento em Z
@@ -2294,41 +2388,61 @@ d3 = str2double(get(handles.d3, 'String'));
 d4 = str2double(get(handles.d4, 'String'));
 
 % omega - Angulo em X
-omega1 = str2double(get(handles.omega1, 'String'));
-omega2 = str2double(get(handles.omega2, 'String'));
-omega3 = str2double(get(handles.omega3, 'String'));
-omega4 = str2double(get(handles.omega4, 'String'));
+omega1 = deg2rad(str2double(get(handles.omega1, 'String')));
+omega2 = deg2rad(str2double(get(handles.omega2, 'String')));
+omega3 = deg2rad(str2double(get(handles.omega3, 'String')));
+omega4 = deg2rad(str2double(get(handles.omega4, 'String')));
 
 contents = cellstr(handles.pop_dh.String);
 dof = contents{get(handles.pop_dh,'Value')};
 
+cla(handles.axes2, 'reset');
+
 switch dof
     case '1'
+        dimens = a1 + d1;
         [Robot, L] = mountRobot(1, a1, a2, a3, a4, alpha1, alpha2, alpha3, alpha4, d1, d2, d3, d4);
-        Robot.plot(omega1, 'workspace', [-300 300, -300 300, -300 300],'tilesize',100);
-        set(handles.tb_link1, 'Data', L(1).A(omega1).double());
+        T = Robot.fkine(omega1).double();
+        initial_ang = omega1;
+        Robot.plot(omega1, 'workspace', [-dimens*1.2 dimens*1.2, -dimens*1.2 dimens*1.2, -dimens*1.2 dimens*1.2],'tilesize',100);
+        set(handles.tb_link1, 'Data', round(L(1).A(omega1).double(),3));
     case '2'
+        dimens = a1 + a2;
         [Robot, L] = mountRobot(2, a1, a2, a3, a4, alpha1, alpha2, alpha3, alpha4, d1, d2, d3, d4);
-        Robot.plot([omega1 omega2], 'workspace', [-300 300, -300 300, -300 300],'tilesize',100);
-        set(handles.tb_link1, 'Data', L(1).A(omega1).double());
-        set(handles.tb_link2, 'Data', L(2).A(omega2).double());
+        T = Robot.fkine([omega1 omega2]).double();
+        initial_ang = [omega1 omega2];
+        Robot.plot([omega1 omega2], 'workspace', [-dimens*1.2 dimens*1.2, -dimens*1.2 dimens*1.2, -dimens*1.2 dimens*1.2],'tilesize',100);
+        set(handles.tb_link1, 'Data', round(L(1).A(omega1).double(),3));
+        set(handles.tb_link2, 'Data', round(L(2).A(omega2).double(),3));
     case '3'
+        dimens = a1 + a2 + a3;
         [Robot, L] = mountRobot(3, a1, a2, a3, a4, alpha1, alpha2, alpha3, alpha4, d1, d2, d3, d4);
-        Robot.plot([omega1 omega2 omega3], 'workspace', [-300 300, -300 300, -300 300],'tilesize',100);
-        set(handles.tb_link1, 'Data', L(1).A(omega1).double());
-        set(handles.tb_link2, 'Data', L(2).A(omega2).double());
-        set(handles.tb_link3, 'Data', L(3).A(omega3).double());
+        T = Robot.fkine([omega1 omega2 omega3]).double();
+        initial_ang = [omega1 omega2 omega3];
+        Robot.plot([omega1 omega2 omega3], 'workspace', [-dimens*1.2 dimens*1.2, -dimens*1.2 dimens*1.2, -dimens*1.2 dimens*1.2],'tilesize',100);
+        set(handles.tb_link1, 'Data', round(L(1).A(omega1).double(),3));
+        set(handles.tb_link2, 'Data', round(L(2).A(omega2).double(),3));
+        set(handles.tb_link3, 'Data', round(L(3).A(omega3).double(),3));
     otherwise
+        dimens = a1 + a2 + a3 + a4;
         [Robot, L] = mountRobot(4, a1, a2, a3, a4, alpha1, alpha2, alpha3, alpha4, d1, d2, d3, d4);
-        Robot.plot([omega1 omega2 omega3 omega4], 'workspace', [-300 300, -300 300, -300 300],'tilesize',100);
-        set(handles.tb_link1, 'Data', L(1).A(omega1).double());
-        set(handles.tb_link2, 'Data', L(2).A(omega2).double());
-        set(handles.tb_link3, 'Data', L(3).A(omega3).double());
-        set(handles.tb_link4, 'Data', L(4).A(omega4).double());
+        T = Robot.fkine([omega1 omega2 omega3 omega4]).double();
+        initial_ang = [omega1 omega2 omega3 omega4];
+        Robot.plot([omega1 omega2 omega3 omega4], 'workspace', [-dimens*1.2 dimens*1.2, -dimens*1.2 dimens*1.2, -dimens*1.2 dimens*1.2],'tilesize',100);
+        % remover comentario se utilizar manipulador fisico
+        connArd(dof, a, 0, initial_ang(1), initial_ang(2), initial_ang(3), initial_ang(4));
+        set(handles.tb_link1, 'Data', round(L(1).A(omega1).double(),3));
+        set(handles.tb_link2, 'Data', round(L(2).A(omega2).double(),3));
+        set(handles.tb_link3, 'Data', round(L(3).A(omega3).double(),3));
+        set(handles.tb_link4, 'Data', round(L(4).A(omega4).double(),3));
 end
 
+set(handles.tb_T, 'Data', round(T,3));
+initial_pos = [T(1,4) T(2,4) T(3,4)];
 rotate3d off;
+sentidoPunho = 1;
 status_rotation = 0;
+
 guidata(hObject,handles);
 
 % --- Executes on button press in pushbutton12.
@@ -2339,7 +2453,7 @@ function pushbutton12_Callback(hObject, eventdata, handles)
 
 
 % --- Executes during object creation, after setting all properties.
-function pushbutton12_CreateFcn(hObject, eventdata, handles)
+function pushbutton12_CreateFcn(hObject, ~, handles)
 % hObject    handle to pushbutton12 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
@@ -2504,58 +2618,57 @@ function bt_pos_inicio_Callback(hObject, eventdata, handles)
 % hObject    handle to bt_pos_inicio (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global a1
-global a2
-global a3
-global a4
-global alpha1
-global alpha2
-global alpha3
-global alpha4
-global d1
-global d2
-global d3
-global d4
 global status_rotation
+global Robot
 
-% recebendo valor do GUIDE
-% a - Comprimento em Z
-a1 = str2double(get(handles.a1, 'String'));
-a2 = str2double(get(handles.a2, 'String'));
-a3 = str2double(get(handles.a3, 'String'));
-a4 = str2double(get(handles.a4, 'String'));
+% % recebendo valor do GUIDE
+% % a - Comprimento em Z
+% a1 = str2double(get(handles.a1, 'String'));
+% a2 = str2double(get(handles.a2, 'String'));
+% a3 = str2double(get(handles.a3, 'String'));
+% a4 = str2double(get(handles.a4, 'String'));
+% 
+% % alpha - Torção em Z
+% alpha1 = str2double(get(handles.alpha1, 'String'));
+% alpha2 = str2double(get(handles.alpha2, 'String'));
+% alpha3 = str2double(get(handles.alpha3, 'String'));
+% alpha4 = str2double(get(handles.alpha4, 'String'));
+% 
+% % d - Distancia em X
+% d1 = str2double(get(handles.d1, 'String'));
+% d2 = str2double(get(handles.d2, 'String'));
+% d3 = str2double(get(handles.d3, 'String'));
+% d4 = str2double(get(handles.d4, 'String'));
+% 
+% Robot = mountRobot(a1, a2, a3, a4, alpha1, alpha2, alpha3, alpha4, d1, d2, d3, d4);
 
-% alpha - Torção em Z
-alpha1 = str2double(get(handles.alpha1, 'String'));
-alpha2 = str2double(get(handles.alpha2, 'String'));
-alpha3 = str2double(get(handles.alpha3, 'String'));
-alpha4 = str2double(get(handles.alpha4, 'String'));
-
-% d - Distancia em X
-d1 = str2double(get(handles.d1, 'String'));
-d2 = str2double(get(handles.d2, 'String'));
-d3 = str2double(get(handles.d3, 'String'));
-d4 = str2double(get(handles.d4, 'String'));
-
-Robot = mountRobot(a1, a2, a3, a4, alpha1, alpha2, alpha3, alpha4, d1, d2, d3, d4);
-
-Robot.plot([0 0 0 0], 'workspace', [-300 300, -300 300, -300 300],'tilesize',100);
+Robot.animate([0 0 0 0]);
 
 rotate3d off;
 status_rotation = 0;
 guidata(hObject,handles);
 
 
-% --- Executes on button press in pushbutton14.
-function pushbutton14_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton14 (see GCBO)
+% --- Executes on button press in fecha_garra.
+function fecha_garra_Callback(hObject, eventdata, handles)
+% hObject    handle to fecha_garra (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global status_garra;
+global a;
 
+%fecha garra
+if status_garra == 0
+   servoWrite(a,3,0);
+   status_garra = 1;
+else
+   status_garra = 0;
+   servoWrite(a,3,180); 
+end
 
-% --- Executes on button press in pushbutton15.
-function pushbutton15_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton15 (see GCBO)
+% --- Executes on button press in refUSB.
+function refUSB_Callback(hObject, eventdata, handles)
+% hObject    handle to refUSB (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % global status_zoom
@@ -2567,6 +2680,12 @@ function pushbutton15_Callback(hObject, eventdata, handles)
 %     zoom off;
 %     status_zoom = 0;
 % end; 
+
+if(isempty(seriallist))
+    handles.listUsb.String = 'NoUSB';
+else
+    handles.listUsb.String = seriallist';
+end
 guidata(hObject,handles);
 
 % --- Executes on button press in pushbutton17.
@@ -2576,9 +2695,9 @@ function pushbutton17_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
-% --- Executes on button press in pushbutton16.
-function pushbutton16_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton16 (see GCBO)
+% --- Executes on button press in bt_rotate3d.
+function bt_rotate3d_Callback(hObject, eventdata, handles)
+% hObject    handle to bt_rotate3d (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global status_rotation
@@ -2617,55 +2736,105 @@ function bt_enviar_inv_Callback(hObject, eventdata, handles)
 % hObject    handle to bt_enviar_inv (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+global sentidoPunho;
 global status_rotation;
 global Robot;
 global L;
 global dof;
+global T;
+global initial_pos;
+global initial_ang;
+global a;
 
 px = double(handles.sld_x.Value);
 py = double(handles.sld_y.Value);
 pz = double(handles.sld_z.Value);
-%angGarra = deg2rad(handles.sld_omega4.Value);
 
-Tinv = [1 0 0 px;
-        0 1 0 py;
-        0 0 1 pz;
-        0 0 0 1];
-    
-J = Robot.ikcon(Tinv);
-switch dof
-    case '1'
-        Robot.plot(J, 'workspace', [-300 300, -300 300, -300 300],'tilesize',100);
-
-        set(handles.tb_link1, 'Data', L(1).A(J).double());
-
-    case '2'
-        Robot.plot(J, 'workspace', [-300 300, -300 300, -300 300],'tilesize',100);
-
-        set(handles.tb_link1, 'Data', L(1).A(J(1)).double());
-        set(handles.tb_link2, 'Data', L(2).A(J(2)).double());
-
-    case '3'
-        Robot.plot(J, 'workspace', [-300 300, -300 300, -300 300],'tilesize',100);
-
-        set(handles.tb_link1, 'Data', L(1).A(J(1)).double());
-        set(handles.tb_link2, 'Data', L(2).A(J(2)).double());
-        set(handles.tb_link3, 'Data', L(3).A(J(3)).double());
-
-    otherwise
-        Robot.plot(J, 'workspace', [-300 300, -300 300, -300 300],'tilesize',100);
-
-        set(handles.tb_link1, 'Data', L(1).A(J(1)).double());
-        set(handles.tb_link2, 'Data', L(2).A(J(2)).double());
-        set(handles.tb_link3, 'Data', L(3).A(J(3)).double());
-        set(handles.tb_link4, 'Data', L(4).A(J(4)).double());
-
+if sentidoPunho == 1
+    angGarra = deg2rad(str2double(handles.lab_ang_garr.String));
+else
+    angGarra = -deg2rad(str2double(handles.lab_ang_garr.String));
 end
-   
-% J = Robot.ikine(Tinv, [0 0 0], [1 1 1 1 0 0]);
-%J = Robot.ikune(Tinv);
-%Robot.plot([omega1 omega2 omega3 omega4], 'workspace', [-300 300, -300 300, -300 300],'tilesize',100);
+
+Taux1=transl(px, py, pz)
+
+    switch dof
+        case '1'
+            try 
+                %initial_ang(1) = angGarra;
+                J = Robot.ikine(Taux1, 'q0', initial_ang, 'mask',[1, 0, 0, 0, 0, 0], 'rlimit',300);
+                T = Robot.fkine(J).double();
+                Robot.animate(J);
+
+                set(handles.tb_link1, 'Data', round(L(1).A(J).double(),3));
+                initial_ang(1) = J(1);
+            catch exception
+               errordlg('Posição Não Permitida','Erro - Posição');  
+            end
+        case '2'
+            try 
+                initial_ang(2) = angGarra;
+                J = Robot.ikine(Taux1, 'q0', initial_ang, 'mask',[1, 1, 0, 0, 0, 0], 'rlimit',300);
+                T = Robot.fkine(J).double();
+                Robot.animate(J);
+
+                set(handles.tb_link1, 'Data', round(L(1).A(J(1)).double(),3));
+                set(handles.tb_link2, 'Data', round(L(2).A(J(2)).double(),3));
+
+                initial_ang = [J(1) J(2)];
+            catch exception
+               errordlg('Posição Não Permitida','Erro - Posição');  
+            end
+        case '3'
+            try 
+                initial_ang(3) = angGarra;
+                J = Robot.ikine(Taux1, 'q0', initial_ang, 'mask',[1, 1, 1, 0, 0, 0], 'rlimit',300);
+                T = Robot.fkine(J).double();
+                Robot.animate(J);
+
+                set(handles.tb_link1, 'Data', round(L(1).A(J(1)).double(),3));
+                set(handles.tb_link2, 'Data', round(L(2).A(J(2)).double(),3));
+                set(handles.tb_link3, 'Data', round(L(3).A(J(3)).double(),3));
+%                 if J(3) > 1.1*angGarra || J(3) < 0.9*angGarra
+%                     text_help = sprintf('Ângulo:%.2fº não pode ser alcançado\nÂngulo sugerido: %.2fº',angGarra*180/pi, J(3)*180/pi); 
+%                     helpdlg(text_help,'Dica!');
+%                 end
+                initial_ang = [J(1) J(2) J(3)];                
+            catch exception
+               errordlg('Posição Não Permitida','Erro - Posição');  
+            end
+
+        otherwise
+            try
+                initial_ang(4) = angGarra;
+                J = Robot.ikine(Taux1, 'q0', initial_ang, 'mask',[1, 1, 1, 0, 0, 0], 'rlimit',300);
+                T = Robot.fkine(J).double();
+                Robot.animate(J);
+                %Robot.plot(J, 'workspace', [-300 300, -300 300, -300 300],'tilesize',100);
+
+                set(handles.tb_link1, 'Data', round(L(1).A(J(1)).double(),3));
+                set(handles.tb_link2, 'Data', round(L(2).A(J(2)).double(),3));
+                set(handles.tb_link3, 'Data', round(L(3).A(J(3)).double(),3));
+                set(handles.tb_link4, 'Data', round(L(4).A(J(4)).double(),3));
+                
+%                 if J(4) > 1.6*angGarra || J(4) < 0.4*angGarra
+%                     text_help = sprintf('Ângulo:%.2fº não pode ser alcançado\n Ângulo sugerido: %.2fº',angGarra*180/pi, J(4)*180/pi); 
+%                     helpdlg(text_help,'Dica!');
+%                 end
+                initial_ang = [J(1) J(2) J(3) J(4)];
+                %descomentar se for utilizar com manipulador fisico
+                %connArd(dof, a, 0, initial_ang(1), initial_ang(2), initial_ang(3), initial_ang(4));
+            catch exception
+               errordlg('Posição Não Permitida','Erro - Posição');  
+            end
+
+    end
+    initial_pos = [T(1,4) T(2,4) T(3,4)];
+    
+%end
+
+set(handles.tb_T, 'Data', round(T,3));
+%initial_pos = [px py pz];
 
 rotate3d off;
 status_rotation = 0;
@@ -2881,18 +3050,245 @@ view(90,0);
 guidata(hObject,handles);
 
 
-% --- Executes on button press in pushbutton20.
-function pushbutton20_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton20 (see GCBO)
+% --- Executes on button press in bt_traj_salvar.
+function bt_traj_salvar_Callback(hObject, eventdata, handles)
+% hObject    handle to bt_traj_salvar (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global pontos_salvos;
+global status_traj;
+global num_pontos;
+
+if status_traj == 0
+    status_traj = 1;
+    pontos_salvos = [ ...
+        str2double(get(handles.lb_pos_inicx, 'String'))  str2double(get(handles.lb_pos_inicy, 'String'))  str2double(get(handles.lb_pos_inicz, 'String'))  str2double(get(handles.lb_pos_inic_time, 'String')); ...
+        str2double(get(handles.lb_pos_finx, 'String'))  str2double(get(handles.lb_pos_finy, 'String'))  str2double(get(handles.lb_pos_finz, 'String'))  str2double(get(handles.lb_pos_final_time, 'String'))  ...
+                    ];
+else
+    pontos_salvos = [ pontos_salvos; ... 
+        str2double(get(handles.lb_pos_inicx, 'String'))  str2double(get(handles.lb_pos_inicy, 'String'))  str2double(get(handles.lb_pos_inicz, 'String'))  str2double(get(handles.lb_pos_inic_time, 'String')); ...
+        str2double(get(handles.lb_pos_finx, 'String'))  str2double(get(handles.lb_pos_finy, 'String'))  str2double(get(handles.lb_pos_finz, 'String'))  str2double(get(handles.lb_pos_final_time, 'String'))  ...
+                    ];
+end
+num_pontos =  size(pontos_salvos);
+num_pontos = num_pontos(1);
+handles.lb_pos_salva.String = num_pontos(1);
+guidata(hObject,handles);
 
 
-% --- Executes on button press in pushbutton21.
-function pushbutton21_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton21 (see GCBO)
+% --- Executes on button press in bt_trajet.
+function bt_trajet_Callback(hObject, eventdata, handles)
+% hObject    handle to bt_trajet (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global pontos_salvos;
+global num_pontos;
+global status_traj;
+global initial_ang;
+global initial_pos;
+global Robot;
+global status_rotation;
+global T;
+global L;
+global dof;
+global a;
+global status_loop;
+
+if status_traj == 0
+    text_help = sprintf('Nenhum Ponto Salvo!'); 
+    helpdlg(text_help,'Dica!');
+else
+    if num_pontos > 2
+    end
+    ponto = [transl(pontos_salvos(1, 1), pontos_salvos(1, 2), pontos_salvos(1, 3));...
+            transl(pontos_salvos(2, 1), pontos_salvos(2, 2), pontos_salvos(2, 3))];
+        
+    ts =  abs(pontos_salvos(2, 4) - pontos_salvos(1, 4));
+    traj_cin = ctraj(ponto(1:4, :), ponto(5:8, :), ts);
+    inter = 3;
+    
+
+%       sem manipulador
+%     p1 = transl(pontos_salvos(1, 1), pontos_salvos(1, 2), pontos_salvos(1, 3));
+%     p2 = transl(pontos_salvos(2, 1), pontos_salvos(2, 2), pontos_salvos(2, 3));
+%     time = pontos_salvos(1, 4):0.1:pontos_salvos(2, 4);
+%     switch dof
+%         case '1'
+%             try
+%                 J1 = Robot.ikine(p1, 'q0', initial_ang, 'mask',[1, 0, 0, 0, 0, 0],'rlimit',300);
+%                 J2 = Robot.ikine(p2, 'q0', initial_ang, 'mask',[1, 0, 0, 0, 0, 0],'rlimit',300);
+%                 qj = jtraj(J1, J2, time);
+%                 set(handles.tb_link1, 'Data', round(L(1).A(J1).double(),3));
+%                 T = Robot.fkine(J1).double();
+%                 set(handles.tb_T, 'Data', round(T,3));
+%                 Robot.animate(qj);
+%                 set(handles.tb_link1, 'Data', round(L(1).A(J2).double(),3));
+%                 
+%                 T = Robot.fkine(J2).double();
+%                 set(handles.tb_T, 'Data', round(T,3));
+%             catch
+%                 text_help = sprintf('Posição não permitida!'); 
+%                 errordlg(text_help,'Erro - Posição'); 
+%             end
+%         case '2'
+%             try
+%                 J1 = Robot.ikine(p1, 'q0', initial_ang, 'mask',[1, 1, 0, 0, 0, 0],'rlimit',300);
+%                 J2 = Robot.ikine(p2, 'q0', initial_ang, 'mask',[1, 1, 0, 0, 0, 0],'rlimit',300);
+%                 qj = jtraj(J1, J2, time);
+%                 set(handles.tb_link1, 'Data', round(L(1).A(J1(1)).double(),3));
+%                 set(handles.tb_link2, 'Data', round(L(2).A(J1(2)).double(),3));
+%                 T = Robot.fkine(J1).double();
+%                 set(handles.tb_T, 'Data', round(T,3));
+%                 Robot.animate(qj);
+%                 set(handles.tb_link1, 'Data', round(L(1).A(J2(1)).double(),3));
+%                 set(handles.tb_link2, 'Data', round(L(2).A(J2(2)).double(),3));
+%                 
+%                 T = Robot.fkine(J2).double();
+%                 set(handles.tb_T, 'Data', round(T,3));
+%             catch
+%                 text_help = sprintf('Posição não permitida!'); 
+%                 errordlg(text_help,'Erro - Posição'); 
+%             end
+%         case '3'
+%             try
+%                 J1 = Robot.ikine(p1, 'q0', initial_ang, 'mask',[1, 1, 1, 0, 0, 0],'rlimit',300);
+%                 J2 = Robot.ikine(p2, 'q0', initial_ang, 'mask',[1, 1, 1, 0, 0, 0],'rlimit',300);
+%                 qj = jtraj(J1, J2, time);
+%                 set(handles.tb_link1, 'Data', round(L(1).A(J1(1)).double(),3));
+%                 set(handles.tb_link2, 'Data', round(L(2).A(J1(2)).double(),3));
+%                 set(handles.tb_link3, 'Data', round(L(3).A(J1(3)).double(),3));
+%                 T = Robot.fkine(J1).double();
+%                 set(handles.tb_T, 'Data', round(T,3));
+%                 Robot.animate(qj);
+%                 set(handles.tb_link1, 'Data', round(L(1).A(J2(1)).double(),3));
+%                 set(handles.tb_link2, 'Data', round(L(2).A(J2(2)).double(),3));
+%                 set(handles.tb_link3, 'Data', round(L(3).A(J2(3)).double(),3));
+%                 
+%                 T = Robot.fkine(J2).double();
+%                 set(handles.tb_T, 'Data', round(T,3));
+%             catch
+%                 text_help = sprintf('Posição não permitida!'); 
+%                 errordlg(text_help,'Erro - Posição'); 
+%             end
+%         otherwise
+%             try
+%                 J1 = Robot.ikine(p1, 'q0', initial_ang, 'mask',[1, 1, 1, 0, 0, 0],'rlimit',300);
+%                 J2 = Robot.ikine(p2, 'q0', initial_ang, 'mask',[1, 1, 1, 0, 0, 0],'rlimit',300);
+%                 qj = jtraj(J1, J2, time);
+%                 set(handles.tb_link1, 'Data', round(L(1).A(J1(1)).double(),3));
+%                 set(handles.tb_link2, 'Data', round(L(2).A(J1(2)).double(),3));
+%                 set(handles.tb_link3, 'Data', round(L(3).A(J1(3)).double(),3));
+%                 set(handles.tb_link4, 'Data', round(L(4).A(J1(4)).double(),3));
+%                 T = Robot.fkine(J1).double();
+%                 set(handles.tb_T, 'Data', round(T,3));
+%                 Robot.animate(qj);
+%                 set(handles.tb_link1, 'Data', round(L(1).A(J2(1)).double(),3));
+%                 set(handles.tb_link2, 'Data', round(L(2).A(J2(2)).double(),3));
+%                 set(handles.tb_link3, 'Data', round(L(3).A(J2(3)).double(),3));
+%                 set(handles.tb_link4, 'Data', round(L(4).A(J2(4)).double(),3));
+%                 
+%                 T = Robot.fkine(J2).double();
+%                 set(handles.tb_T, 'Data', round(T,3));
+%             catch
+%                 text_help = sprintf('Posição não permitida!'); 
+%                 errordlg(text_help,'Erro - Posição'); 
+%             end
+% 
+%     end   
+    
+%     
+%     try
+%         J1 = Robot.ikine(p1, 'q0', initial_ang, 'mask',[1, 1, 1, 0, 0, 0],'rlimit',300);
+%         J2 = Robot.ikine(p2, 'q0', initial_ang, 'mask',[1, 1, 1, 0, 0, 0],'rlimit',300);
+%         qj = jtraj(J1, J2, time);
+%         Robot.animate(qj);
+%     catch
+%         text_help = sprintf('Posição não permitida!'); 
+%         errordlg(text_help,'Erro - Posição'); 
+%     end
+    
+    
+    
+   % se estiver com manipulador fisico
+    while num_pontos >= inter
+        ponto = [ponto; ...
+                 transl(pontos_salvos(inter, 1), pontos_salvos(inter, 2), pontos_salvos(inter, 3))];
+        ts = [ts abs(pontos_salvos(inter, 4)-pontos_salvos(inter-1, 4))];
+        traj_cin = [traj_cin; ctraj(ponto((inter-1)*4+1:4*inter, :), ponto((inter-2)*4+1:4*(inter-1), :), ts(inter-1))];
+        inter = inter + 1;
+    end
+    inter = 1;
+    tempo_espera = 0.75;
+    tam_traj_cin = size(traj_cin);
+    while tam_traj_cin(3) >= inter || status_loop == 1
+        if status_loop == 1 && inter > tam_traj_cin(3)
+            inter = 1;
+        end
+        col = 1;
+        while((num_pontos-1) >= col)
+            try
+                switch dof
+                    case '1'
+                        J = Robot.ikine(traj_cin((col-1)*4+1:4*col, :, inter), 'q0', initial_ang, 'mask',[1, 0, 0, 0, 0, 0], 'rlimit',300);
+                        T = Robot.fkine(J).double();
+                        Robot.animate(J);
+                        set(handles.tb_link1, 'Data', round(L(1).A(J(1)).double(),3));
+                        initial_ang = J(1);
+                        initial_pos = [T(1,4) T(2,4) T(3,4)];
+                        set(handles.tb_T, 'Data', round(T,3));
+                    case '2'
+                        J = Robot.ikine(traj_cin((col-1)*4+1:4*col, :, inter), 'q0', initial_ang, 'mask',[1, 1, 0, 0, 0, 0], 'rlimit',300);
+                        T = Robot.fkine(J).double();
+                        Robot.animate(J);
+
+                        set(handles.tb_link1, 'Data', round(L(1).A(J(1)).double(),3));
+                        set(handles.tb_link2, 'Data', round(L(2).A(J(2)).double(),3));
+                        
+                        initial_ang = [J(1) J(2)];
+                        initial_pos = [T(1,4) T(2,4) T(3,4)];
+                        set(handles.tb_T, 'Data', round(T,3));
+                    case '3'
+                        J = Robot.ikine(traj_cin((col-1)*4+1:4*col, :, inter), 'q0', initial_ang, 'mask',[1, 1, 1, 0, 0, 0], 'rlimit',300);
+                        T = Robot.fkine(J).double();
+                        Robot.animate(J);
+
+                        set(handles.tb_link1, 'Data', round(L(1).A(J(1)).double(),3));
+                        set(handles.tb_link2, 'Data', round(L(2).A(J(2)).double(),3));
+                        set(handles.tb_link3, 'Data', round(L(3).A(J(3)).double(),3));
+                        
+                        initial_ang = [J(1) J(2) J(3)];
+                        initial_pos = [T(1,4) T(2,4) T(3,4)];
+                        set(handles.tb_T, 'Data', round(T,3));
+                    otherwise
+                        J = Robot.ikine(traj_cin((col-1)*4+1:4*col, :, inter), 'q0', initial_ang, 'mask',[1, 1, 1, 0, 0, 0], 'rlimit',300);
+                        T = Robot.fkine(J).double();
+                        Robot.animate(J);
+
+                        set(handles.tb_link1, 'Data', round(L(1).A(J(1)).double(),3));
+                        set(handles.tb_link2, 'Data', round(L(2).A(J(2)).double(),3));
+                        set(handles.tb_link3, 'Data', round(L(3).A(J(3)).double(),3));
+                        set(handles.tb_link4, 'Data', round(L(4).A(J(4)).double(),3));
+
+                        initial_ang = [J(1) J(2) J(3) J(4)];
+                        % remover comentarios se utilizar manipulador fisico 
+                        connArd(dof, a, 0, initial_ang(1), initial_ang(2), initial_ang(3), initial_ang(4));
+                        pause(tempo_espera);
+                        initial_pos = [T(1,4) T(2,4) T(3,4)];
+                        set(handles.tb_T, 'Data', round(T,3));  
+                end
+            catch exception
+                exception
+                errordlg('Posição Não Permitida','Erro - Posição');  
+            end
+            col = col + 1;
+        end
+        inter =inter + 1;
+    end
+    rotate3d off;
+    status_rotation = 0;
+end
+guidata(hObject,handles)
 
 
 % --- Executes on slider movement.
@@ -2918,18 +3314,18 @@ end
 
 
 
-function edit131_Callback(hObject, eventdata, handles)
-% hObject    handle to edit131 (see GCBO)
+function lb_pos_inicx_Callback(hObject, eventdata, handles)
+% hObject    handle to lb_pos_inicx (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit131 as text
-%        str2double(get(hObject,'String')) returns contents of edit131 as a double
+% Hints: get(hObject,'String') returns contents of lb_pos_inicx as text
+%        str2double(get(hObject,'String')) returns contents of lb_pos_inicx as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit131_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit131 (see GCBO)
+function lb_pos_inicx_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lb_pos_inicx (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -3054,18 +3450,18 @@ end
 
 
 
-function edit135_Callback(hObject, eventdata, handles)
-% hObject    handle to edit135 (see GCBO)
+function lb_pos_finx_Callback(hObject, eventdata, handles)
+% hObject    handle to lb_pos_finx (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit135 as text
-%        str2double(get(hObject,'String')) returns contents of edit135 as a double
+% Hints: get(hObject,'String') returns contents of lb_pos_finx as text
+%        str2double(get(hObject,'String')) returns contents of lb_pos_finx as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit135_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit135 (see GCBO)
+function lb_pos_finx_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lb_pos_finx (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -3077,18 +3473,18 @@ end
 
 
 
-function edit136_Callback(hObject, eventdata, handles)
-% hObject    handle to edit136 (see GCBO)
+function lb_pos_inicy_Callback(hObject, eventdata, handles)
+% hObject    handle to lb_pos_inicy (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit136 as text
-%        str2double(get(hObject,'String')) returns contents of edit136 as a double
+% Hints: get(hObject,'String') returns contents of lb_pos_inicy as text
+%        str2double(get(hObject,'String')) returns contents of lb_pos_inicy as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit136_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit136 (see GCBO)
+function lb_pos_inicy_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lb_pos_inicy (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -3100,18 +3496,18 @@ end
 
 
 
-function edit137_Callback(hObject, eventdata, handles)
-% hObject    handle to edit137 (see GCBO)
+function lb_pos_finy_Callback(hObject, eventdata, handles)
+% hObject    handle to lb_pos_finy (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit137 as text
-%        str2double(get(hObject,'String')) returns contents of edit137 as a double
+% Hints: get(hObject,'String') returns contents of lb_pos_finy as text
+%        str2double(get(hObject,'String')) returns contents of lb_pos_finy as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit137_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit137 (see GCBO)
+function lb_pos_finy_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lb_pos_finy (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -3123,18 +3519,18 @@ end
 
 
 
-function edit138_Callback(hObject, eventdata, handles)
-% hObject    handle to edit138 (see GCBO)
+function lb_pos_inicz_Callback(hObject, eventdata, handles)
+% hObject    handle to lb_pos_inicz (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit138 as text
-%        str2double(get(hObject,'String')) returns contents of edit138 as a double
+% Hints: get(hObject,'String') returns contents of lb_pos_inicz as text
+%        str2double(get(hObject,'String')) returns contents of lb_pos_inicz as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit138_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit138 (see GCBO)
+function lb_pos_inicz_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lb_pos_inicz (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -3146,18 +3542,18 @@ end
 
 
 
-function edit139_Callback(hObject, eventdata, handles)
-% hObject    handle to edit139 (see GCBO)
+function lb_pos_finz_Callback(hObject, eventdata, handles)
+% hObject    handle to lb_pos_finz (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit139 as text
-%        str2double(get(hObject,'String')) returns contents of edit139 as a double
+% Hints: get(hObject,'String') returns contents of lb_pos_finz as text
+%        str2double(get(hObject,'String')) returns contents of lb_pos_finz as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit139_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit139 (see GCBO)
+function lb_pos_finz_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lb_pos_finz (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -3169,18 +3565,18 @@ end
 
 
 
-function edit140_Callback(hObject, eventdata, handles)
-% hObject    handle to edit140 (see GCBO)
+function lb_pos_inic_time_Callback(hObject, eventdata, handles)
+% hObject    handle to lb_pos_inic_time (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit140 as text
-%        str2double(get(hObject,'String')) returns contents of edit140 as a double
+% Hints: get(hObject,'String') returns contents of lb_pos_inic_time as text
+%        str2double(get(hObject,'String')) returns contents of lb_pos_inic_time as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit140_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit140 (see GCBO)
+function lb_pos_inic_time_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lb_pos_inic_time (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -3192,18 +3588,18 @@ end
 
 
 
-function edit141_Callback(hObject, eventdata, handles)
-% hObject    handle to edit141 (see GCBO)
+function lb_pos_final_time_Callback(hObject, eventdata, handles)
+% hObject    handle to lb_pos_final_time (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit141 as text
-%        str2double(get(hObject,'String')) returns contents of edit141 as a double
+% Hints: get(hObject,'String') returns contents of lb_pos_final_time as text
+%        str2double(get(hObject,'String')) returns contents of lb_pos_final_time as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit141_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit141 (see GCBO)
+function lb_pos_final_time_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lb_pos_final_time (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -3265,3 +3661,1175 @@ function panel_traj_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to panel_traj (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
+
+
+
+function lab_omega3_Callback(hObject, eventdata, handles)
+% hObject    handle to lab_omega3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of lab_omega3 as text
+%        str2double(get(hObject,'String')) returns contents of lab_omega3 as a double
+valSld1 = hObject.String;
+handles.sld_omega3.Value = str2double(valSld1);
+
+guidata(hObject,handles);
+
+
+% --- Executes on button press in bt_help.
+function bt_help_Callback(hObject, eventdata, handles)
+% hObject    handle to bt_help (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in bt_sair.
+function bt_sair_Callback(hObject, eventdata, handles)
+% hObject    handle to bt_sair (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in bt_teste.
+function bt_teste_Callback(hObject, eventdata, handles)
+% hObject    handle to bt_teste (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in radiobutton6.
+function radiobutton6_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobutton6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Hint: get(hObject,'Value') returns toggle state of radiobutton6
+global sentidoPunho
+
+sentidoPunho = 1;
+guidata(hObject,handles);
+
+% --- Executes on button press in radiobutton7.
+function radiobutton7_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobutton7 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radiobutton7
+global sentidoPunho
+
+sentidoPunho = 0;
+guidata(hObject,handles);
+
+
+% --- Executes on selection change in listbox2.
+function listbox2_Callback(hObject, eventdata, handles)
+% hObject    handle to listbox2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns listbox2 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from listbox2
+
+
+% --- Executes during object creation, after setting all properties.
+function listbox2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to listbox2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function lb_pos_salva_Callback(hObject, eventdata, handles)
+% hObject    handle to lb_pos_salva (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of lb_pos_salva as text
+%        str2double(get(hObject,'String')) returns contents of lb_pos_salva as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function lb_pos_salva_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lb_pos_salva (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in bt_traj_limpar.
+function bt_traj_limpar_Callback(hObject, eventdata, handles)
+% hObject    handle to bt_traj_limpar (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global pontos_salvos;
+global status_traj;
+status_traj = 0;
+pontos_salvos = 0;
+handles.lb_pos_salva.String = 0;
+guidata(hObject,handles);
+
+
+% --- Executes on button press in cb_loop.
+function cb_loop_Callback(hObject, eventdata, handles)
+% hObject    handle to cb_loop (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global status_loop;
+% Hint: get(hObject,'Value') returns toggle state of cb_loop
+
+if hObject.Value == 0
+    status_loop = 0;
+else
+    status_loop = 1;
+end
+guidata(hObject,handles);
+    
+
+
+% --- Executes on button press in pushbutton33.
+function pushbutton33_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton33 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on slider movement.
+function slider12_Callback(hObject, eventdata, handles)
+% hObject    handle to slider12 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+
+
+% --- Executes during object creation, after setting all properties.
+function slider12_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to slider12 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+
+
+function edit161_Callback(hObject, eventdata, handles)
+% hObject    handle to edit161 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit161 as text
+%        str2double(get(hObject,'String')) returns contents of edit161 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit161_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit161 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on slider movement.
+function slider13_Callback(hObject, eventdata, handles)
+% hObject    handle to slider13 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+
+
+% --- Executes during object creation, after setting all properties.
+function slider13_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to slider13 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+
+
+function edit162_Callback(hObject, eventdata, handles)
+% hObject    handle to edit162 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit162 as text
+%        str2double(get(hObject,'String')) returns contents of edit162 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit162_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit162 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on slider movement.
+function slider14_Callback(hObject, eventdata, handles)
+% hObject    handle to slider14 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+
+
+% --- Executes during object creation, after setting all properties.
+function slider14_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to slider14 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+
+
+function edit163_Callback(hObject, eventdata, handles)
+% hObject    handle to edit163 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit163 as text
+%        str2double(get(hObject,'String')) returns contents of edit163 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit163_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit163 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit164_Callback(hObject, eventdata, handles)
+% hObject    handle to edit164 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit164 as text
+%        str2double(get(hObject,'String')) returns contents of edit164 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit164_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit164 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in pushbutton34.
+function pushbutton34_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton34 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton40.
+function pushbutton40_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton40 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton28.
+function pushbutton28_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton28 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+
+function edit165_Callback(hObject, eventdata, handles)
+% hObject    handle to edit165 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit165 as text
+%        str2double(get(hObject,'String')) returns contents of edit165 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit165_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit165 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenu4.
+function popupmenu4_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu4 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu4
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu4_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit149_Callback(hObject, eventdata, handles)
+% hObject    handle to edit149 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit149 as text
+%        str2double(get(hObject,'String')) returns contents of edit149 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit149_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit149 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit152_Callback(hObject, eventdata, handles)
+% hObject    handle to edit152 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit152 as text
+%        str2double(get(hObject,'String')) returns contents of edit152 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit152_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit152 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit157_Callback(hObject, eventdata, handles)
+% hObject    handle to edit157 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit157 as text
+%        str2double(get(hObject,'String')) returns contents of edit157 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit157_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit157 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit160_Callback(hObject, eventdata, handles)
+% hObject    handle to edit160 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit160 as text
+%        str2double(get(hObject,'String')) returns contents of edit160 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit160_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit160 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit177_Callback(hObject, eventdata, handles)
+% hObject    handle to edit177 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit177 as text
+%        str2double(get(hObject,'String')) returns contents of edit177 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit177_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit177 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit178_Callback(hObject, eventdata, handles)
+% hObject    handle to edit178 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit178 as text
+%        str2double(get(hObject,'String')) returns contents of edit178 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit178_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit178 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit179_Callback(hObject, eventdata, handles)
+% hObject    handle to edit179 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit179 as text
+%        str2double(get(hObject,'String')) returns contents of edit179 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit179_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit179 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit180_Callback(hObject, eventdata, handles)
+% hObject    handle to edit180 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit180 as text
+%        str2double(get(hObject,'String')) returns contents of edit180 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit180_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit180 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit156_Callback(hObject, eventdata, handles)
+% hObject    handle to edit156 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit156 as text
+%        str2double(get(hObject,'String')) returns contents of edit156 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit156_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit156 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenu5.
+function popupmenu5_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu5 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu5
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu5_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit170_Callback(hObject, eventdata, handles)
+% hObject    handle to edit170 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit170 as text
+%        str2double(get(hObject,'String')) returns contents of edit170 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit170_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit170 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit171_Callback(hObject, eventdata, handles)
+% hObject    handle to edit171 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit171 as text
+%        str2double(get(hObject,'String')) returns contents of edit171 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit171_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit171 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit172_Callback(hObject, eventdata, handles)
+% hObject    handle to edit172 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit172 as text
+%        str2double(get(hObject,'String')) returns contents of edit172 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit172_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit172 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenu3.
+function popupmenu3_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu3 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu3
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu3_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit173_Callback(hObject, eventdata, handles)
+% hObject    handle to edit173 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit173 as text
+%        str2double(get(hObject,'String')) returns contents of edit173 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit173_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit173 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit174_Callback(hObject, eventdata, handles)
+% hObject    handle to edit174 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit174 as text
+%        str2double(get(hObject,'String')) returns contents of edit174 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit174_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit174 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit175_Callback(hObject, eventdata, handles)
+% hObject    handle to edit175 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit175 as text
+%        str2double(get(hObject,'String')) returns contents of edit175 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit175_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit175 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit176_Callback(hObject, eventdata, handles)
+% hObject    handle to edit176 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit176 as text
+%        str2double(get(hObject,'String')) returns contents of edit176 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit176_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit176 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenu6.
+function popupmenu6_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu6 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu6
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu6_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit181_Callback(hObject, eventdata, handles)
+% hObject    handle to edit181 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit181 as text
+%        str2double(get(hObject,'String')) returns contents of edit181 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit181_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit181 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit182_Callback(hObject, eventdata, handles)
+% hObject    handle to edit182 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit182 as text
+%        str2double(get(hObject,'String')) returns contents of edit182 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit182_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit182 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit183_Callback(hObject, eventdata, handles)
+% hObject    handle to edit183 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit183 as text
+%        str2double(get(hObject,'String')) returns contents of edit183 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit183_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit183 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit184_Callback(hObject, eventdata, handles)
+% hObject    handle to edit184 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit184 as text
+%        str2double(get(hObject,'String')) returns contents of edit184 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit184_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit184 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit185_Callback(hObject, eventdata, handles)
+% hObject    handle to edit185 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit185 as text
+%        str2double(get(hObject,'String')) returns contents of edit185 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit185_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit185 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit186_Callback(hObject, eventdata, handles)
+% hObject    handle to edit186 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit186 as text
+%        str2double(get(hObject,'String')) returns contents of edit186 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit186_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit186 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit187_Callback(hObject, eventdata, handles)
+% hObject    handle to edit187 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit187 as text
+%        str2double(get(hObject,'String')) returns contents of edit187 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit187_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit187 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit188_Callback(hObject, eventdata, handles)
+% hObject    handle to edit188 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit188 as text
+%        str2double(get(hObject,'String')) returns contents of edit188 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit188_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit188 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit189_Callback(hObject, eventdata, handles)
+% hObject    handle to edit189 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit189 as text
+%        str2double(get(hObject,'String')) returns contents of edit189 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit189_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit189 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit190_Callback(hObject, eventdata, handles)
+% hObject    handle to edit190 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit190 as text
+%        str2double(get(hObject,'String')) returns contents of edit190 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit190_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit190 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit191_Callback(hObject, eventdata, handles)
+% hObject    handle to edit191 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit191 as text
+%        str2double(get(hObject,'String')) returns contents of edit191 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit191_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit191 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit192_Callback(hObject, eventdata, handles)
+% hObject    handle to edit192 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit192 as text
+%        str2double(get(hObject,'String')) returns contents of edit192 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit192_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit192 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit193_Callback(hObject, eventdata, handles)
+% hObject    handle to edit193 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit193 as text
+%        str2double(get(hObject,'String')) returns contents of edit193 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit193_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit193 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit194_Callback(hObject, eventdata, handles)
+% hObject    handle to edit194 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit194 as text
+%        str2double(get(hObject,'String')) returns contents of edit194 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit194_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit194 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit195_Callback(hObject, eventdata, handles)
+% hObject    handle to edit195 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit195 as text
+%        str2double(get(hObject,'String')) returns contents of edit195 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit195_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit195 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit196_Callback(hObject, eventdata, handles)
+% hObject    handle to edit196 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit196 as text
+%        str2double(get(hObject,'String')) returns contents of edit196 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit196_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit196 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
